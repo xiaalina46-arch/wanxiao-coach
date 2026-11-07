@@ -28,6 +28,7 @@ const FEEDBACK_WISHES = [
 ];
 function feedbackRate(a){return String(a===100?100:Math.min(99.9,Math.round(a*10)/10))}
 function buildParentFeedback(d,wish){
+ if(['grammar','reading','companion'].includes(d.type))return buildSubjectFeedback(d,wish);
  const {type,name,total,times,forgot,rate,notes,words,vocab,date}=d;
  const [,month,day]=date.split('-');
  const title={review:'单词抗遗忘复习反馈',class:'单词正课学习反馈',trial:'英语试课反馈',finish:'试课结束反馈'}[type];
@@ -51,4 +52,34 @@ function buildParentFeedback(d,wish){
  if(type==='finish')out+='\n\n本次试课已结束，感谢孩子和家长的配合与支持。🌷';
  else if(wish)out+=`\n\n🌱寄语：\n\n${wish[0]}\n\n${wish[1]}希望${name}继续培养好习惯，让每一个学过的单词都成为自己的知识积累！🌟🌷`;
  return out;
+}
+
+function subjectArticles(text){return text.split('\n').map(s=>s.trim()).filter(Boolean).map(line=>{const parts=line.split('|').map(x=>x.trim());if(parts.length>2)throw Error('每篇文章请按“文章标题 | 正确率”填写');const raw=(parts[1]||'').replace(/%$/,'').trim();if(raw!==''&&(!/^\d+(\.\d+)?$/.test(raw)||Number(raw)>100))throw Error('文章正确率须为0～100之间的数字');return {title:parts[0],rate:raw===''?null:Number(raw)}})}
+function buildSubjectFeedback(d,wish){
+ const x=d.subject||{},lines=[],isGrammar=d.type==='grammar',isReading=d.type==='reading';
+ const date=d.date.split('-').map(Number);const dateText=`${date[0]}年${date[1]}月${date[2]}日`;
+ const header=isGrammar?'🎯 万校AI英语·语法课后反馈':isReading?'🎯 万校英语·阅读课后反馈':'🌻复习数据报告单';
+ lines.push(header,`📅 日期：${dateText}`);if(d.coach)lines.push(`👨‍🏫 教练：${d.coach}`);lines.push(`🧑‍🎓 学生：${d.name}`);
+ const fallback='本次未填写，暂不作评价。';
+ if(isGrammar){
+  lines.push('','1. 学习内容',`• 语法点：${x.topic||'本次未填写'}`);if(x.textbook)lines.push(`• 教材对应：${x.textbook}`);
+  lines.push('','2. 掌握情况',`• 👍 已掌握：${x.mastered||'本次未填写'}`);if(x.masteryRate!==''&&x.masteryRate!=null)lines.push(`• 检测正确率：${x.masteryRate}%`);lines.push(`• ⚠️ 需加强：${x.weak||'本次未填写'}`);
+  lines.push('','3. 提升建议','① 复习错题集，尝试用费曼学习法把解题思路讲清楚。','② 抄写并背诵本次【学海拾贝】知识点。');if(x.suggestion)lines.push(x.suggestion);
+  lines.push('','4. 教练评语',d.notes||fallback,'针对薄弱点多练习，坚持积累，逐步巩固！💪');
+  lines.push('','5. 课后任务',x.tasks||'① 完成群内布置的知识点抄写与背诵。\n② 复习本次错题，按教练安排完成额外练习。');
+ }else if(isReading){
+  const articles=subjectArticles(x.articles||'');
+  lines.push('','1. 学习情况');if(x.grade)lines.push(`• 年级：${x.grade}`);if(x.articleCount!==''&&x.articleCount!=null)lines.push(`• 本次阅读：${x.articleCount}篇`);for(const article of articles)lines.push(`• 《${article.title||'未命名文章'}》${article.rate===null?'（未填写正确率）':'正确率：'+article.rate+'%'}`);if(!articles.length)lines.push('• 本次未填写文章及正确率。');
+  lines.push('','2. 亮点与进步',`• 亮点：${x.highlights||'本次未填写，暂不评价课堂亮点。'}`,`• 进步：${x.progress||'未提供前后对比记录，暂不作进步判断。'}`);if(x.newWords!==''&&x.newWords!=null)lines.push(`• 本次新增生词：${x.newWords}个`);
+  lines.push('','3. 重点词汇',x.keyWords||'本次未填写。');
+  lines.push('','4. 小建议',`• 失分点：${x.lostPoints||'本次未填写。'}`,`• 改进：${x.suggestion||'尝试带着问题读文章，结合题目定位依据；必要时使用AI辅助拆解长难句，再自行核对理解。'}`);
+  lines.push('','5. 教练评语',d.notes||fallback,'继续坚持适合自己的阅读节奏，逐步积累词汇与理解能力。💪');
+  lines.push('','6. 课后任务',x.tasks||'① 万校互联小程序：复习本次生词。\n② 按约定完成教练布置的任务。');
+ }else{
+  const fields=[['复习内容','reviewContent'],['复习状态','reviewState'],['复习效率','efficiency']];for(const [label,key] of fields)lines.push(`⭐${label}：${x[key]||'本次未填写。'}`);
+  lines.push(`⭐耗时：${x.minutes!==''&&x.minutes!=null?x.minutes+'分钟':'本次未填写。'}`,`⭐遗忘知识点：${x.forgotten||'本次未填写。'}`,`⭐高效突破：${x.breakthrough||'建议针对遗忘知识点整理典型例题，分析解题思路，进行专项练习。'}`,`⭐今日总结：${d.notes||fallback}`);
+  lines.push('','💎复习方法：','1️⃣ 错题回溯法：回顾易错点并分类强化。','2️⃣ 思维导图梳理：构建知识点网络，强化各模块关联记忆。','3️⃣ 口述讲题：向老师复述解题思路，深化理解并练习表达。','4️⃣ 限时实战：建议每日安排10分钟专项训练，按实际情况调整。');if(x.tasks)lines.push('','📚课后任务：',x.tasks);
+ }
+ if(wish)lines.push('','🌱寄语：','',wish[0],'',wish[1]+`希望${d.name}保持适合自己的学习节奏，一点一点积累！🌟🌷`);
+ return lines.join('\n');
 }
