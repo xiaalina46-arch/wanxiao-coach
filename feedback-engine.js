@@ -62,11 +62,11 @@ function buildSubjectFeedback(d,wish){
  lines.push(header,`📅 日期：${dateText}`);if(d.coach)lines.push(`👨‍🏫 教练：${d.coach}`);lines.push(`🧑‍🎓 学生：${d.name}`);
  const fallback='本次未填写，暂不作评价。';
  if(isGrammar){
-  lines.push('','1. 学习内容',`• 语法点：${x.topic||'本次未填写'}`);if(x.textbook)lines.push(`• 教材对应：${x.textbook}`);
-  lines.push('','2. 掌握情况',`• 👍 已掌握：${x.mastered||'本次未填写'}`);if(x.masteryRate!==''&&x.masteryRate!=null)lines.push(`• 检测正确率：${x.masteryRate}%`);lines.push(`• ⚠️ 需加强：${x.weak||'本次未填写'}`);
-  lines.push('','3. 提升建议','① 复习错题集，尝试用费曼学习法把解题思路讲清楚。','② 抄写并背诵本次【学海拾贝】知识点。');if(x.suggestion)lines.push(x.suggestion);
+  lines.push('','1. 学习内容',x.textbook?`• 教材对应：${x.textbook}`:'本次未填写教材信息。');
+  lines.push('','2. 掌握情况',`• 👍 已掌握：${x.mastered||'本次未填写'}`);lines.push(`• ⚠️ 需加强：${x.weak||'本次未填写'}`);
+  lines.push('','3. 提升建议','① 复习错题集，尝试用费曼学习法把解题思路讲清楚。','② 复习本次【学海拾贝】课程内容。');if(x.suggestion)lines.push(x.suggestion);
   lines.push('','4. 教练评语',d.notes||fallback,'针对薄弱点多练习，坚持积累，逐步巩固！💪');
-  lines.push('','5. 课后任务',x.tasks||'① 完成群内布置的知识点抄写与背诵。\n② 复习本次错题，按教练安排完成额外练习。');
+  lines.push('','5. 课后任务',x.tasks||'① 完成群内布置的抄写与背诵任务。\n② 复习本次错题，按教练安排完成额外练习。');
  }else if(isReading){
   const articles=subjectArticles(x.articles||'');
   lines.push('','1. 学习情况');if(x.grade)lines.push(`• 年级：${x.grade}`);if(x.articleCount!==''&&x.articleCount!=null)lines.push(`• 本次阅读：${x.articleCount}篇`);for(const article of articles)lines.push(`• 《${article.title||'未命名文章'}》${article.rate===null?'（未填写正确率）':'正确率：'+article.rate+'%'}`);if(!articles.length)lines.push('• 本次未填写文章及正确率。');
