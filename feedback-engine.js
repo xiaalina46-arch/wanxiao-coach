@@ -54,7 +54,6 @@ function buildParentFeedback(d,wish){
  return out;
 }
 
-function subjectArticles(text){return text.split('\n').map(s=>s.trim()).filter(Boolean).map(line=>{const parts=line.split('|').map(x=>x.trim());if(parts.length>2)throw Error('每篇文章请按“文章标题 | 正确率”填写');const raw=(parts[1]||'').replace(/%$/,'').trim();if(raw!==''&&(!/^\d+(\.\d+)?$/.test(raw)||Number(raw)>100))throw Error('文章正确率须为0～100之间的数字');return {title:parts[0],rate:raw===''?null:Number(raw)}})}
 function buildSubjectFeedback(d,wish){
  const x=d.subject||{},lines=[],isGrammar=d.type==='grammar',isReading=d.type==='reading';
  const date=d.date.split('-').map(Number);const dateText=`${date[0]}年${date[1]}月${date[2]}日`;
@@ -68,8 +67,7 @@ function buildSubjectFeedback(d,wish){
   lines.push('','4. 教练评语',d.notes||fallback,'针对薄弱点多练习，坚持积累，逐步巩固！💪');
   lines.push('','5. 课后任务',x.tasks||'① 完成群内布置的抄写与背诵任务。\n② 复习本次错题，按教练安排完成额外练习。');
  }else if(isReading){
-  const articles=subjectArticles(x.articles||'');
-  lines.push('','1. 学习情况');if(x.grade)lines.push(`• 年级：${x.grade}`);if(x.articleCount!==''&&x.articleCount!=null)lines.push(`• 本次阅读：${x.articleCount}篇`);for(const article of articles)lines.push(`• 《${article.title||'未命名文章'}》${article.rate===null?'（未填写正确率）':'正确率：'+article.rate+'%'}`);if(!articles.length)lines.push('• 本次未填写文章及正确率。');
+  lines.push('','1. 学习情况');if(x.grade)lines.push(`• 年级：${x.grade}`);if(x.comprehensionCount!==''&&x.comprehensionCount!=null)lines.push(`• 阅读理解：完成${x.comprehensionCount}篇`);if(x.clozeCount!==''&&x.clozeCount!=null)lines.push(`• 完形填空：完成${x.clozeCount}篇`);if((x.comprehensionCount===''||x.comprehensionCount==null)&&(x.clozeCount===''||x.clozeCount==null))lines.push('• 本次未填写阅读理解及完形填空完成篇数。');
   lines.push('','2. 亮点与进步',`• 亮点：${x.highlights||'本次未填写，暂不评价课堂亮点。'}`,`• 进步：${x.progress||'未提供前后对比记录，暂不作进步判断。'}`);if(x.newWords!==''&&x.newWords!=null)lines.push(`• 本次新增生词：${x.newWords}个`);
   lines.push('','3. 重点词汇',x.keyWords||'本次未填写。');
   lines.push('','4. 小建议',`• 失分点：${x.lostPoints||'本次未填写。'}`,`• 改进：${x.suggestion||'尝试带着问题读文章，结合题目定位依据；必要时使用AI辅助拆解长难句，再自行核对理解。'}`);
