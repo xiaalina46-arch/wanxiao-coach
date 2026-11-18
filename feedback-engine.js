@@ -28,6 +28,7 @@ const FEEDBACK_WISHES = [
 ];
 function feedbackRate(a){return String(a===100?100:Math.min(99.9,Math.round(a*10)/10))}
 function buildParentFeedback(d,wish){
+ if(d.type==='sixclass'||d.type==='sixtrial')return buildSixSenseFeedback(d,wish);
  if(['grammar','reading','companion'].includes(d.type))return buildSubjectFeedback(d,wish);
  const {type,name,total,times,forgot,rate,notes,words,vocab,date}=d;
  const [,month,day]=date.split('-');
